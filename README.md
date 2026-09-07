@@ -2,6 +2,8 @@
 
 An interactive command-line quiz game for learning JavaScript, Node.js, and general programming concepts.
 
+An interactive command-line quiz game for learning JavaScript, Node.js, and general programming concepts.
+
 ## Overview
 
 Quiz CLI is a dependency-free Node.js application that runs in an interactive terminal. It loads quiz content from `data/questions.json`, lets you choose a category and question count, presents shuffled questions, and provides immediate feedback with explanations. At the end of a round it displays the score and a review of incorrect answers, then offers the option to play again.
