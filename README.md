@@ -4,41 +4,40 @@ An interactive command-line quiz game for learning JavaScript, Node.js, and gene
 
 ## Overview
 
-Quiz CLI is a dependency-free Node.js application that runs in an interactive terminal. It loads quiz content from `data/questions.json`, lets you choose a category and question count, presents shuffled questions, and provides immediate feedback with explanations. At the end of a round it displays the score and a review of incorrect answers, then offers the option to play again.
+Quiz CLI is a dependency-free Node.js application that runs in an interactive terminal. It loads quiz content from [`data/questions.json`](data/questions.json), lets the player choose a category and question count, shuffles the selected questions, and provides immediate feedback with explanations. After each round it displays the score and incorrect-answer review, then offers the option to play again.
 
-The repository name is `test-app`, while the npm package name declared in `package.json` is `quiz-cli`.
+The repository is named `test-app`; the npm package declared in `package.json` is `quiz-cli` version `1.0.0`.
 
 ## Features
 
 - Interactive terminal-based category and question-count selection.
-- Three included categories:
-  - JavaScript Basics
-  - Node.js Fundamentals
-  - General Programming
-- Choice of all available questions, three questions, or five questions when the selected category has enough questions.
-- Shuffled question order for each quiz round.
-- Immediate correct/incorrect feedback and explanations.
-- Progress bar and question counter.
+- Three included categories: JavaScript Basics, Node.js Fundamentals, and General Programming.
+- Choice of all available questions, three questions, or five questions when the category contains enough questions.
+- Fisher–Yates shuffling for each quiz round.
+- Immediate correct/incorrect feedback and optional explanations from the question data.
+- A 30-character Unicode progress bar and question counter.
 - Final score, percentage, performance message, and incorrect-answer review.
 - Replay prompt after each completed quiz.
-- ANSI-colored output, Unicode progress indicators, and emoji for terminal presentation.
-- No external runtime or development dependencies.
+- ANSI-colored output, Unicode progress indicators, and emoji without external packages.
+- In-memory state only; scores are not persisted.
 
 ## Tech Stack
 
-- **Runtime:** Node.js 18 or newer
-- **Language:** JavaScript using native ES modules
-- **Input:** Node.js built-in `readline` module
-- **File I/O:** Node.js built-in `node:fs/promises`, `node:path`, and `node:url` modules
-- **Data:** JSON file loaded at runtime
-- **Dependencies:** None
+| Area | Implementation |
+| --- | --- |
+| Runtime | Node.js 18 or newer |
+| Language | JavaScript with native ES modules (`"type": "module"`) |
+| Terminal input | Node.js built-in `readline` module |
+| File access | Node.js built-in `node:fs/promises`, `node:path`, and `node:url` modules |
+| Content | JSON loaded at runtime |
+| Dependencies | None; no runtime or development dependencies are declared |
 
 ## Prerequisites
 
-- Node.js `18.0.0` or newer, as specified by the `engines` field in `package.json`.
+- Node.js `18.0.0` or newer, as specified by `package.json`.
 - An interactive terminal capable of accepting standard input.
 
-No browser, server, database, environment variables, or external services are required.
+The application does not require a browser, server, database, environment variables, or external services.
 
 ## Installation
 
@@ -49,15 +48,15 @@ git clone https://github.com/juna1981/test-app.git
 cd test-app
 ```
 
-The application has no declared dependencies, so installing packages is not required. If you want npm to process the package manifest, running `npm install` is optional and may create a lockfile.
+No dependency installation is required because `package.json` declares no dependencies. Running `npm install` is optional and is not needed to run the application.
 
 ## Configuration
 
-There is no environment-based configuration. Quiz content is stored in [`data/questions.json`](data/questions.json) and is read relative to `index.js` when the application starts.
+There is no environment-based configuration. At startup, `index.js` resolves the application directory and reads `data/questions.json` relative to it.
 
-### Customizing questions
+### Question format
 
-Questions are grouped beneath the top-level `categories` object. Each category contains a display `name` and a `questions` array. A question uses this structure:
+Question content is grouped beneath a top-level `categories` object. Each category has a display `name` and a `questions` array. Each question has this shape:
 
 ```json
 {
@@ -68,9 +67,19 @@ Questions are grouped beneath the top-level `categories` object. Each category c
 }
 ```
 
-`answer` is a zero-based index into `options`; in the example, `2` identifies `const`. Keep the answer index valid when changing the options. The `explanation` is shown after the answer and should describe the correct response.
+`answer` is a zero-based index into `options`; in this example, `2` identifies `const`. Keep the index valid when editing questions. If present, `explanation` is displayed after the answer.
 
-To add or edit a category, preserve the existing category shape and provide a unique category key, a display `name`, and a `questions` array. Categories are discovered from the JSON file, so they appear in the category menu without a separate registration step.
+To add or edit a category, preserve the existing category shape and provide a category key, display `name`, and `questions` array. Category keys are read dynamically by `index.js`, so a new category is included in the menu without a separate code registration step.
+
+### Included categories
+
+The bundled data currently contains five questions in each category:
+
+| Key | Display name | Topics represented |
+| --- | --- | --- |
+| `javascript` | JavaScript Basics | Constants, array methods, strict equality, primitive types, and `typeof null` |
+| `nodejs` | Node.js Fundamentals | File-system modules, the event loop, npm initialization, `process.argv`, and ES module imports |
+| `general` | General Programming | APIs, recursion, JSON, callbacks, and version control |
 
 ## Usage
 
@@ -96,17 +105,18 @@ The interactive flow is:
 6. View the final score and incorrect-answer review.
 7. Choose whether to play again.
 
-Each category currently contains five questions. When three questions is selected, the first three entries in that category's JSON array are chosen and then shuffled; the application does not randomly sample three questions from all five entries.
+When three or five questions is selected, `index.js` takes that many questions from the beginning of the category's JSON array. The `Quiz` class then shuffles that selected copy; the application does not randomly sample from the entire category before slicing.
 
-## Quiz Categories
+### npm scripts
 
-The bundled question data contains:
+| Command | Description |
+| --- | --- |
+| `npm start` | Runs `node index.js` and starts the quiz. |
+| `npm test` | Runs Node's built-in test runner with `node --test`. |
 
-| Category key | Display name | Topics represented |
-| --- | --- | --- |
-| `javascript` | JavaScript Basics | Constants, array methods, strict equality, primitive types, and `typeof null` |
-| `nodejs` | Node.js Fundamentals | File-system modules, the event loop, npm initialization, `process.argv`, and ES module imports |
-| `general` | General Programming | APIs, recursion, JSON, callbacks, and version control |
+### Runtime behavior
+
+`src/input.js` validates numbered selections and repeats the prompt until a valid option is entered. Yes/no confirmation returns `true` only for an answer beginning with `y`. If startup or execution fails, `index.js` prints the error and exits with status code `1`.
 
 ## File Structure
 
@@ -118,62 +128,45 @@ The bundled question data contains:
 │   ├── colors.js         # ANSI color and text-style helpers
 │   ├── input.js          # readline interface and interactive prompts
 │   └── quiz.js            # Quiz state, shuffling, scoring, and results
-├── index.js              # Application entry point and main interaction loop
+├── index.js              # Application entry point and replay loop
 ├── package.json           # npm metadata, scripts, and Node.js requirement
 └── README.md              # Project documentation
 ```
 
-## Architecture Overview
+### Architecture and data flow
 
-1. `index.js` resolves the application directory and reads `data/questions.json` using Node.js file-system APIs.
-2. The loaded category keys populate the category selection menu.
-3. The selected category's questions are sliced according to the chosen count and passed to the `Quiz` class.
-4. `Quiz` makes a copy of the selected questions and shuffles that copy with the Fisher–Yates algorithm.
-5. `input.js` uses the built-in `readline` module to validate numbered selections, yes/no confirmation, and Enter-to-continue prompts.
-6. `Quiz` records answers in memory, updates the score, shows explanations, and renders final results.
-7. `colors.js` supplies ANSI escape-code helpers for the terminal UI.
-
-Scores and progress exist only during the running process. The application does not persist results.
-
-## Scripts
-
-The `package.json` manifest defines these npm scripts:
-
-| Command | Description |
-| --- | --- |
-| `npm start` | Runs `node index.js` and starts the quiz. |
-| `npm test` | Runs Node's built-in test runner with `node --test`. |
+1. `index.js` loads and parses `data/questions.json` with Node.js file-system APIs.
+2. Category keys and display names populate the category menu.
+3. The selected category's questions are sliced according to the chosen count.
+4. A `Quiz` instance copies and shuffles those questions with the Fisher–Yates algorithm.
+5. `input.js` handles `readline` prompts, numeric validation, confirmation, and pause prompts.
+6. `Quiz` records answers in memory, updates the score, displays explanations, and renders results.
+7. `colors.js` applies ANSI escape-code styles to terminal output.
 
 ## Testing
 
-A test script is present, but no test files are included in the repository. Consequently, automated test coverage and specific test behavior are not documented.
+The repository includes a test script, but no test files are present. Automated coverage and specific test behavior are therefore not documented.
 
-To run the declared test command:
+Run the declared command with:
 
 ```bash
 npm test
 ```
 
-## Limitations and Notes
+## Deployment
 
-- The game requires an interactive terminal; it is not a browser or server application.
-- Output uses ANSI color codes, Unicode bar characters, and emoji. The appearance may vary by terminal.
-- There is no database, network service, build step, or deployment configuration.
-- There are no environment variables or environment files used by the application.
-- Results are not saved after the process exits.
-- Question counts are limited by the options implemented in `index.js`; the current data provides five questions per category.
-- If a question file is malformed or cannot be read, the application reports the error and exits with status code 1.
+This is a local command-line application. No deployment process, hosting configuration, build step, or service configuration is included. Run it directly with Node.js on a machine with an interactive terminal.
 
 ## Contributing
 
-Contributions can improve the question bank, terminal experience, or quiz logic. When changing question data, preserve the documented JSON structure and ensure every `answer` value points to an item in its question's `options` array. For code changes, keep the application compatible with Node.js 18 or newer and run the declared npm commands where applicable.
+Contributions can improve the question bank, terminal experience, or quiz logic. When changing `data/questions.json`:
 
-No repository-specific contribution workflow is documented.
+- Preserve the documented JSON structure.
+- Ensure every `answer` value points to an item in its question's `options` array.
+- Keep category names and question text suitable for the intended educational quiz.
 
-## Deployment
-
-This project is a local command-line application. No deployment process or hosting configuration is included; run it directly with Node.js on a machine with an interactive terminal.
+For code changes, maintain compatibility with Node.js 18 or newer and run the declared npm commands where applicable. No repository-specific contribution workflow is documented.
 
 ## License
 
-The package metadata declares the project under the **MIT License**. A separate `LICENSE` file is not present in the repository, so refer to `package.json` for the declared license information.
+`package.json` declares the project under the **MIT License**. A separate `LICENSE` file is not present in the repository.
